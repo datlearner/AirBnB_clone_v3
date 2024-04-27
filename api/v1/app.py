@@ -1,35 +1,45 @@
 #!/usr/bin/python3
-"""comment"""
-from flask import Flask, Blueprint, jsonify
-from models import storage
-from api.v1.views import app_views
-from os import environ
+"""
+app
+"""
+
+from flask import Flask, jsonify
 from flask_cors import CORS
+from os import getenv
+
+from api.v1.views import app_views
+from models import storage
+
 
 app = Flask(__name__)
+
+CORS(app, resources={r"/*": {"origins": "0.0.0.0"}})
+
 app.register_blueprint(app_views)
-cors = CORS(app, resources={"/*": {"origins": "0.0.0.0"}})
 
 
 @app.teardown_appcontext
-def teardown_app(self):
-    """comment"""
+def teardown(exception):
+    """
+    teardown function
+    """
     storage.close()
 
 
 @app.errorhandler(404)
-def not_found(error):
-    """deffo pleeffofo"""
-    return jsonify({'error': 'Not found'}), 404
+def handle_404(exception):
+    """
+    handles 404 error
+    :return: returns 404 json
+    """
+    data = {
+        "error": "Not found"
+    }
 
+    resp = jsonify(data)
+    resp.status_code = 404
+
+    return(resp)
 
 if __name__ == "__main__":
-    if environ.get('HBNB_API_HOST') is None:
-        hos = "0.0.0.0"
-    else:
-        hos = environ.get('HBNB_API_HOST')
-    if environ.get('HBNB_API_PORT') is None:
-        por = 5000
-    else:
-        por = environ.get('HBNB_API_PORT')
-    app.run(host=hos, port=por, threaded=True)
+    app.run(getenv("HBNB_API_HOST"), getenv("HBNB_API_PORT"))
